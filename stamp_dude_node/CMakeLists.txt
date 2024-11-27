@@ -14,6 +14,9 @@ rclcpp_components_register_node(
 target_link_libraries(${MY_LIB_NAME})
 
 
+ament_auto_add_library(${PROJECT_NAME} SHARED src/stamp_converter.cpp)
+rclcpp_components_register_nodes(${PROJECT_NAME} "stamp_dude_node::StampConverter")
+
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   set(ament_cmake_copyright_FOUND TRUE)

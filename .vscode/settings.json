@@ -102,4 +102,5 @@
     "variant": "cpp",
     "*.dat": "cpp"
   },
+  "C_Cpp.errorSquiggles": "disabled",
 }
