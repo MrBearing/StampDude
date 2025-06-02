@@ -29,16 +29,24 @@ jobs:
       # This step ensures we have the latest valid GPG key before installing ROS packages
       - name: Update ROS GPG Key
         run: |
+          # Switch to a more reliable Ubuntu mirror to avoid 403 errors
+          sudo sed -i 's/archive.ubuntu.com/mirror.kakao.com/g' /etc/apt/sources.list
+          sudo sed -i 's/security.ubuntu.com/mirror.kakao.com/g' /etc/apt/sources.list
           # Remove all existing ROS repository configurations to avoid conflicts
           sudo rm -f /etc/apt/sources.list.d/ros*.list
           # Add the ROS GPG key using apt-key (deprecated but still works)
           sudo apt-get update || true  # Continue even if this fails
-          sudo apt-get install -y curl gnupg lsb-release
+          # Retry logic for apt-get install
+          for i in {1..3}; do
+            sudo apt-get install -y curl gnupg lsb-release && break || sleep 5;
+          done
           sudo curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | sudo apt-key add -
           # Add the repository
           sudo sh -c 'echo "deb http://packages.ros.org/ros2/ubuntu $(lsb_release -cs) main" > /etc/apt/sources.list.d/ros2-latest.list'
-          # Update package list
-          sudo apt-get update
+          # Update package list with retry
+          for i in {1..3}; do
+            sudo apt-get update && break || sleep 5;
+          done
       - uses: ros-tooling/setup-ros@v0.7
         with:
           required-ros-distributions: ${{ matrix.ros_distribution }}
