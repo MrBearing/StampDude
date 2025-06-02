@@ -20,8 +20,16 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       
-      # Skip setup-ros since we're already in a ROS container
-      # The osrf/ros:jazzy-desktop image has ROS pre-installed
+      # Fix GPG key issue in the container
+      - name: Update ROS 2 GPG Key
+        run: |
+          # Remove the invalid GPG key and update with the latest one
+          sudo rm -f /usr/share/keyrings/ros-archive-keyring.gpg
+          sudo curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg
+          # Update without checking signatures first
+          sudo apt-get update -o Acquire::AllowInsecureRepositories=true || true
+          # Now update normally
+          sudo apt-get update
       
       - name: Build and Test
         uses: ros-tooling/action-ros-ci@v0.3
