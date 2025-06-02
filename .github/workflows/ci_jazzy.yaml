@@ -31,8 +31,8 @@ jobs:
         run: |
           # Remove old/expired GPG key
           sudo rm -f /etc/apt/keyrings/ros-archive-keyring.gpg
-          # Download the latest GPG key from official ROS repository
-          sudo wget https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc -O /etc/apt/keyrings/ros-archive-keyring.asc
+          # Download the latest GPG key from official ROS repository using curl (wget may not be installed)
+          sudo curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc -o /etc/apt/keyrings/ros-archive-keyring.asc
           # Update apt sources to use the new key format (.asc instead of .gpg)
           echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/ros-archive-keyring.asc] http://packages.ros.org/ros2/ubuntu $(. /etc/os-release && echo $UBUNTU_CODENAME) main" | sudo tee /etc/apt/sources.list.d/ros2.list > /dev/null
           # Update package list with the new key
