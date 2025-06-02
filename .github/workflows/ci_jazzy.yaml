@@ -31,14 +31,13 @@ jobs:
         run: |
           # Remove all existing ROS repository configurations to avoid conflicts
           sudo rm -f /etc/apt/sources.list.d/ros*.list
-          # Remove old/expired GPG keys
-          sudo rm -f /etc/apt/keyrings/ros-archive-keyring.gpg
-          sudo rm -f /usr/share/keyrings/ros2-latest-archive-keyring.gpg
-          # Download the latest GPG key from official ROS repository
-          sudo curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc -o /usr/share/keyrings/ros-archive-keyring.gpg
-          # Add the repository with the new key
-          echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(. /etc/os-release && echo $UBUNTU_CODENAME) main" | sudo tee /etc/apt/sources.list.d/ros2.list > /dev/null
-          # Update package list with the new key
+          # Add the ROS GPG key using apt-key (deprecated but still works)
+          sudo apt-get update || true  # Continue even if this fails
+          sudo apt-get install -y curl gnupg lsb-release
+          sudo curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | sudo apt-key add -
+          # Add the repository
+          sudo sh -c 'echo "deb http://packages.ros.org/ros2/ubuntu $(lsb_release -cs) main" > /etc/apt/sources.list.d/ros2-latest.list'
+          # Update package list
           sudo apt-get update
       - uses: ros-tooling/setup-ros@v0.7
         with:
