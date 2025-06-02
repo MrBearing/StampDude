@@ -1,20 +1,19 @@
 #pragma once
 
-#include "rclcpp/rclcpp.hpp"
+#include "stamp_dude/stamper.hpp"
 #include "geometry_msgs/msg/twist.hpp"
 #include "geometry_msgs/msg/twist_stamped.hpp"
 
 namespace stamp_dude
 {
-  class TwistToTwistStamped : public rclcpp::Node
+  class TwistToTwistStamped : public Stamper<geometry_msgs::msg::Twist, geometry_msgs::msg::TwistStamped>
   {
   public:
     explicit TwistToTwistStamped(const rclcpp::NodeOptions & options);
 
-  private:
-    void twist_callback(const geometry_msgs::msg::Twist::SharedPtr msg);
-    rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr publisher_;
-    rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr subscription_;
+  protected:
+    void convert_message(const geometry_msgs::msg::Twist::SharedPtr input_msg, 
+                        geometry_msgs::msg::TwistStamped & output_msg) override;
   };
 } // namespace stamp_dude
 

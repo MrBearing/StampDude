@@ -2,18 +2,15 @@
 
 namespace stamp_dude
 {
-  TwistToTwistStamped::TwistToTwistStamped(const rclcpp::NodeOptions & options) : Node("twist_to_twist_stamped",options)
+  TwistToTwistStamped::TwistToTwistStamped(const rclcpp::NodeOptions & options) 
+    : Stamper<geometry_msgs::msg::Twist, geometry_msgs::msg::TwistStamped>(
+        "twist_to_twist_stamped", "twist", "twist_stamped", options)
   {
-    publisher_ = this->create_publisher<geometry_msgs::msg::TwistStamped>("twist_stamped", 10);
-    subscription_ = this->create_subscription<geometry_msgs::msg::Twist>(
-      "twist", 10, std::bind(&TwistToTwistStamped::twist_callback, this, std::placeholders::_1));
   }
 
-  void TwistToTwistStamped::twist_callback(const geometry_msgs::msg::Twist::SharedPtr msg)
+  void TwistToTwistStamped::convert_message(const geometry_msgs::msg::Twist::SharedPtr input_msg, 
+                                           geometry_msgs::msg::TwistStamped & output_msg)
   {
-    auto stamped_msg = geometry_msgs::msg::TwistStamped();
-    stamped_msg.header.stamp = this->get_clock()->now();
-    stamped_msg.twist = *msg;
-    publisher_->publish(stamped_msg);
+    output_msg.twist = *input_msg;
   }
 } // namespace stamp_dude
