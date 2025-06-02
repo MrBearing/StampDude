@@ -16,26 +16,29 @@ jobs:
       (github.ref_name == 'jazzy')
     container:
       image: osrf/ros:jazzy-desktop
-      options: --privileged
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v3
+      
+      # Skip setup-ros since we're already in a ROS container
+      # The osrf/ros:jazzy-desktop image has ROS pre-installed
+      
       - name: Build and Test
-        shell: bash
-        run: |
-          # Source ROS environment
-          source /opt/ros/jazzy/setup.bash
-          
-          # Update package list (ignore errors)
-          apt-get update || true
-          
-          # Install dependencies using rosdep
-          rosdep update
-          rosdep install --from-paths . --ignore-src -r -y
-          
-          # Build packages
-          colcon build --packages-select stamp_dude stamp_dude_bringup
-          
-          # Run tests
-          colcon test --packages-select stamp_dude stamp_dude_bringup
-          colcon test-result --all --verbose
+        uses: ros-tooling/action-ros-ci@v0.3
+        with:
+          target-ros2-distro: jazzy
+          import-token: ${{ secrets.GITHUB_TOKEN }}
+          package-name: |
+            stamp_dude
+            stamp_dude_bringup
+          # Skip installing ROS since it's pre-installed in the container
+          skip-tests: false
+          colcon-defaults: |
+            {
+              "build": {
+                "mixin": ["coverage-gcc", "coverage-pytest"]
+              },
+              "test": {
+                "mixin": ["coverage-pytest"]
+              }
+            }
