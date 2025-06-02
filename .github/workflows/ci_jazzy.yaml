@@ -21,6 +21,7 @@ jobs:
       - uses: actions/checkout@v3
       
       - name: Build and Test
+        shell: bash
         run: |
           # Source ROS 2 environment
           source /opt/ros/jazzy/setup.bash
