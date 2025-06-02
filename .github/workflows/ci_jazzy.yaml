@@ -29,12 +29,15 @@ jobs:
       # This step ensures we have the latest valid GPG key before installing ROS packages
       - name: Update ROS GPG Key
         run: |
-          # Remove old/expired GPG key
+          # Remove all existing ROS repository configurations to avoid conflicts
+          sudo rm -f /etc/apt/sources.list.d/ros*.list
+          # Remove old/expired GPG keys
           sudo rm -f /etc/apt/keyrings/ros-archive-keyring.gpg
-          # Download the latest GPG key from official ROS repository using curl (wget may not be installed)
-          sudo curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc -o /etc/apt/keyrings/ros-archive-keyring.asc
-          # Update apt sources to use the new key format (.asc instead of .gpg)
-          echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/ros-archive-keyring.asc] http://packages.ros.org/ros2/ubuntu $(. /etc/os-release && echo $UBUNTU_CODENAME) main" | sudo tee /etc/apt/sources.list.d/ros2.list > /dev/null
+          sudo rm -f /usr/share/keyrings/ros2-latest-archive-keyring.gpg
+          # Download the latest GPG key from official ROS repository
+          sudo curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc -o /usr/share/keyrings/ros-archive-keyring.gpg
+          # Add the repository with the new key
+          echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(. /etc/os-release && echo $UBUNTU_CODENAME) main" | sudo tee /etc/apt/sources.list.d/ros2.list > /dev/null
           # Update package list with the new key
           sudo apt-get update
       - uses: ros-tooling/setup-ros@v0.7
