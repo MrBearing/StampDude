@@ -20,33 +20,21 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       
-      # Fix GPG key issue in the container
-      - name: Update ROS 2 GPG Key
-        run: |
-          # Remove the invalid GPG key and update with the latest one
-          sudo rm -f /usr/share/keyrings/ros-archive-keyring.gpg
-          sudo curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg
-          # Update without checking signatures first
-          sudo apt-get update -o Acquire::AllowInsecureRepositories=true || true
-          # Now update normally
-          sudo apt-get update
-      
       - name: Build and Test
-        uses: ros-tooling/action-ros-ci@v0.3
-        with:
-          target-ros2-distro: jazzy
-          import-token: ${{ secrets.GITHUB_TOKEN }}
-          package-name: |
-            stamp_dude
-            stamp_dude_bringup
-          # Skip installing ROS since it's pre-installed in the container
-          skip-tests: false
-          colcon-defaults: |
-            {
-              "build": {
-                "mixin": ["coverage-gcc", "coverage-pytest"]
-              },
-              "test": {
-                "mixin": ["coverage-pytest"]
-              }
-            }
+        run: |
+          # Source ROS 2 environment
+          source /opt/ros/jazzy/setup.bash
+          
+          # Disable ROS apt repository to avoid GPG errors
+          sudo mv /etc/apt/sources.list.d/ros2-latest.list /etc/apt/sources.list.d/ros2-latest.list.disabled || true
+          
+          # Update and install basic dependencies
+          sudo apt-get update
+          sudo apt-get install -y python3-colcon-common-extensions
+          
+          # Build the workspace
+          colcon build --symlink-install --packages-select stamp_dude stamp_dude_bringup
+          
+          # Run tests
+          colcon test --packages-select stamp_dude stamp_dude_bringup
+          colcon test-result --all --verbose
