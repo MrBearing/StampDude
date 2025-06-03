@@ -9,33 +9,30 @@ on:
 
 jobs:
   ci:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     if: |
       ((github.event.action == 'labeled') && (github.event.label.name == 'TESTING') && (github.base_ref == 'jazzy' )) ||
       ((github.event.action == 'synchronize') && (github.base_ref == 'jazzy') && contains(github.event.pull_request.labels.*.name, 'TESTING')) ||
       (github.ref_name == 'jazzy')
     container:
-      image: osrf/ros:jazzy-desktop
+      image: osrf/ros:${{ matrix.ros_distribution }}-desktop
     timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04]
+        ros_distribution: [jazzy]
     steps:
       - uses: actions/checkout@v3
-      
+      - uses: ros-tooling/setup-ros@v0.7.13
+        with:
+          required-ros-distributions: ${{ matrix.ros_distribution }}
       - name: Build and Test
-        shell: bash
-        run: |
-          # Source ROS 2 environment
-          source /opt/ros/jazzy/setup.bash
-          
-          # Disable ROS apt repository to avoid GPG errors
-          sudo mv /etc/apt/sources.list.d/ros2-latest.list /etc/apt/sources.list.d/ros2-latest.list.disabled || true
-          
-          # Update and install basic dependencies
-          sudo apt-get update
-          sudo apt-get install -y python3-colcon-common-extensions
-          
-          # Build the workspace
-          colcon build --symlink-install --packages-select stamp_dude stamp_dude_bringup
-          
-          # Run tests
-          colcon test --packages-select stamp_dude stamp_dude_bringup
-          colcon test-result --all --verbose
+        uses: ros-tooling/action-ros-ci@v0.4.3
+        with:
+          target-ros2-distro: ${{ matrix.ros_distribution }}
+          import-token: ${{ secrets.GITHUB_TOKEN }}
+          # vcs-repo-file-url: build_depends.repos
+          package-name: |
+            stamp_dude
+            stamp_dude_bringup
